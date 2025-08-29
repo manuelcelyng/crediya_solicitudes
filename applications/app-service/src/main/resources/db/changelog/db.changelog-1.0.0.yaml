@@ -1,0 +1,176 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-create-core-tables
+      author: junie
+      changes:
+        - createTable:
+            tableName: estados
+            remarks: Catalogo de estados de la solicitud
+            columns:
+              - column:
+                  name: id_estado
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_estados
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descripcion
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: tipo_prestamo
+            remarks: Tipos de prestamos
+            columns:
+              - column:
+                  name: id_tipo_prestamo
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_tipo_prestamo
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: monto_minimo
+                  type: DECIMAL(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: monto_maximo
+                  type: DECIMAL(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tasa_interes
+                  type: DECIMAL(8,4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: validacion_automatica
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: solicitud
+            remarks: Solicitudes de credito
+            columns:
+              - column:
+                  name: id_solicitud
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_solicitud
+                    nullable: false
+              - column:
+                  name: monto
+                  type: DECIMAL(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: id_tipo_prestamo
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: id_estado
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: plazo
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: documento_identidad
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: solicitud
+            baseColumnNames: id_tipo_prestamo
+            constraintName: fk_solicitud_tipo_prestamo
+            referencedTableName: tipo_prestamo
+            referencedColumnNames: id_tipo_prestamo
+            onDelete: RESTRICT
+            onUpdate: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: solicitud
+            baseColumnNames: id_estado
+            constraintName: fk_solicitud_estado
+            referencedTableName: estados
+            referencedColumnNames: id_estado
+            onDelete: SET NULL
+            onUpdate: CASCADE
+  - changeSet:
+      id: 2-seed-estados
+      author: junie
+      changes:
+        - insert:
+            tableName: estados
+            columns:
+              - column: {name: id_estado, valueNumeric: 1}
+              - column: {name: nombre, value: "PENDIENTE"}
+              - column: {name: descripcion, value: "Pendiente Revision"}
+        - insert:
+            tableName: estados
+            columns:
+              - column: {name: id_estado, valueNumeric: 2}
+              - column: {name: nombre, value: "RECHAZADA"}
+              - column: {name: descripcion, value: "Rechazado"}
+        - insert:
+            tableName: estados
+            columns:
+              - column: {name: id_estado, valueNumeric: 3}
+              - column: {name: nombre, value: "APROBADA"}
+              - column: {name: descripcion, value: "Aprobado por chayanne"}
+
+  - changeSet:
+      id: 3-seed-tipo-prestamo
+      author: junie
+      changes:
+        - insert:
+            tableName: tipo_prestamo
+            columns:
+              - column: {name: id_tipo_prestamo, valueNumeric: 1}
+              - column: {name: nombre, value: "CONSUMO"}
+              - column: {name: monto_minimo, valueNumeric: 1000000.00}
+              - column: {name: monto_maximo, valueNumeric: 20000000.00}
+              - column: {name: tasa_interes, valueNumeric: 0.0200}
+              - column: {name: validacion_automatica, valueBoolean: true}
+        - insert:
+            tableName: tipo_prestamo
+            columns:
+              - column: {name: id_tipo_prestamo, valueNumeric: 2}
+              - column: {name: nombre, value: "VEHICULO"}
+              - column: {name: monto_minimo, valueNumeric: 5000000.00}
+              - column: {name: monto_maximo, valueNumeric: 100000000.00}
+              - column: {name: tasa_interes, valueNumeric: 0.0150}
+              - column: {name: validacion_automatica, valueBoolean: false}
+        - insert:
+            tableName: tipo_prestamo
+            columns:
+              - column: {name: id_tipo_prestamo, valueNumeric: 3}
+              - column: {name: nombre, value: "VIVIENDA"}
+              - column: {name: monto_minimo, valueNumeric: 50000000.00}
+              - column: {name: monto_maximo, valueNumeric: 500000000.00}
+              - column: {name: tasa_interes, valueNumeric: 0.0125}
+              - column: {name: validacion_automatica, valueBoolean: false}
