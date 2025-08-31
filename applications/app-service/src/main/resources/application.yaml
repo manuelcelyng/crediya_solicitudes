@@ -7,6 +7,22 @@ spring:
     name: "solicitudes"
   devtools:
     add-properties: false
+
+
+security:
+  jwt:
+    # CADENA ALEATORIA DE >= 32 BYTES :D, mejor por variable de entorno
+    secret: ${JWT_KEY_SECRET:fQZJCefphgnEAnD9WlLBIQbpzV351d0mb3oGGsT6bvtaSqIZbTSId6wDwV3B1CbxEO7JlxQK6obNR9oUjDlYGg==}
+
+app:
+  issuer: "http://localhost:8080" # Este es el api autenticacion
+  audience: "autenticacion"
+
+
+
+
+
+
 logging:
   pattern:
     level: "%5p [${spring.application.name}] [cid:%X{correlationId}]"
