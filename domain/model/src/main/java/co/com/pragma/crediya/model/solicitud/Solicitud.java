@@ -1,9 +1,11 @@
 package co.com.pragma.crediya.model.solicitud;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
 @NoArgsConstructor
+@Setter
 public class Solicitud {
     private Long idNumber;
     private BigDecimal monto;

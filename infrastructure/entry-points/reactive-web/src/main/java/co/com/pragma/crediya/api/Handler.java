@@ -4,6 +4,8 @@ import co.com.pragma.crediya.api.dto.CreateSolicitudDTO;
 import co.com.pragma.crediya.api.mapper.SolicitudDtoMapper;
 import co.com.pragma.crediya.model.solicitud.Solicitud;
 import co.com.pragma.crediya.usecase.solicitud.SolicitudUseCase;
+import co.com.pragma.crediya.usecase.solicitud.exceptions.TypeErrors;
+import co.com.pragma.crediya.usecase.solicitud.exceptions.UserValidationException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
@@ -27,6 +29,7 @@ import java.util.Set;
 public class Handler {
 
     private final SolicitudUseCase solicitudUseCase;
+
     private final SolicitudDtoMapper solicitudDtoMapper;
     private final Validator validator;
 
@@ -61,25 +64,27 @@ public class Handler {
 
 
                     // Identidad desde el token
-                    String userId = auth.getName(); // = sub trae el id del usuario
+                    String userdocumentId = auth.getName(); // = sub trae el documento de identidad
                     String email  = auth.getTokenAttributes().get("email") != null ? auth.getTokenAttributes().get("email").toString() : null;
+
 
                     // (opcional) cruzar identidad declarada vs token
                     if (dto.email() != null && email != null &&
                             !dto.email().equalsIgnoreCase(email)) {
-                        return ServerResponse.status(HttpStatus.FORBIDDEN)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Map.of("error","FORBIDDEN","message","Email no coincide con el token"));
+                        return Mono.error(new UserValidationException(TypeErrors.USER_VALIDATION_ERROR,
+                                "Email de la solicitud no coincide con el token"));
                     }
-                    if (dto.email() != null && !dto.documentoIdentidad().equals(userId)) {
-                        return ServerResponse.status(HttpStatus.FORBIDDEN)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Map.of("error","FORBIDDEN","message","Token no corresponde al Cliente"));
+                    if (dto.email() != null && !dto.documentoIdentidad().equals(userdocumentId)) {
+                        return Mono.error(new UserValidationException(TypeErrors.USER_VALIDATION_ERROR,
+                                "El documento del Token no corresponde al documento de la solicitud"));
                     }
 
-                    // 4) Forzar dueño desde el token (mejor que confiar en el body)
+
+
+
+
+
                     var model = solicitudDtoMapper.toModel(dto);
-
 
                     return solicitudUseCase.saveSolicitud(model)
                             .doOnSuccess(s -> log.info("[CREATE_SOLICITUD] Solicitud persisted id={}", s.getIdNumber()))

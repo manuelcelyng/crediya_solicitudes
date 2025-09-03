@@ -27,3 +27,5 @@ project(':reactive-web').projectDir = file('./infrastructure/entry-points/reacti
 
 include ':shared'
 project(':shared').projectDir = file('./infrastructure/helpers/shared')
+include ':rest-consumer'
+project(':rest-consumer').projectDir = file('./infrastructure/driven-adapters/rest-consumer')

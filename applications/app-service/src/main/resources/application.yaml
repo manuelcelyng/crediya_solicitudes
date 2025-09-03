@@ -7,22 +7,12 @@ spring:
     name: "solicitudes"
   devtools:
     add-properties: false
-
-
 security:
   jwt:
-    # CADENA ALEATORIA DE >= 32 BYTES :D, mejor por variable de entorno
-    secret: ${JWT_KEY_SECRET:fQZJCefphgnEAnD9WlLBIQbpzV351d0mb3oGGsT6bvtaSqIZbTSId6wDwV3B1CbxEO7JlxQK6obNR9oUjDlYGg==}
-
+    secret: "${JWT_KEY_SECRET:fQZJCefphgnEAnD9WlLBIQbpzV351d0mb3oGGsT6bvtaSqIZbTSId6wDwV3B1CbxEO7JlxQK6obNR9oUjDlYGg==}"
 app:
-  issuer: "http://localhost:8080" # Este es el api autenticacion
+  issuer: "http://localhost:8080"
   audience: "autenticacion"
-
-
-
-
-
-
 logging:
   pattern:
     level: "%5p [${spring.application.name}] [cid:%X{correlationId}]"
@@ -38,5 +28,33 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+adapter:
+  restconsumer:
+    timeout: 5000
+    url: "http://localhost:8080/api/v1/usuarios/valid"
+resilience4j:
+  circuitbreaker:
+    instances:
+      testGet:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
+      testPost:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"

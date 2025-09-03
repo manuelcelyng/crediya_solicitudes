@@ -9,6 +9,10 @@ public class TypeErrors {
 
     // others
     public static final String MONTO_OUT_RANGE = "MONTO_OUT_RANGE";
+
+
+    //VALIDACION USUARIO
+    public static final String USER_VALIDATION_ERROR = "USER_VALIDATION_ERROR";
 }
 
 
