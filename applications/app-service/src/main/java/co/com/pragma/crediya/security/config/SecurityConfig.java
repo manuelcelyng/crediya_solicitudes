@@ -37,7 +37,9 @@ public class SecurityConfig {
                 .authorizeExchange(ex -> ex
                         // abre lo que deba estar público
                         .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+
                         // reglas de negocio
+                        .pathMatchers(HttpMethod.POST, "/api/v1/solicitud/search").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/solicitud/**").hasAuthority("CLIENTE")
                         .anyExchange().authenticated()
                 )

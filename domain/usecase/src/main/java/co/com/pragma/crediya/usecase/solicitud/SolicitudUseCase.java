@@ -2,6 +2,9 @@ package co.com.pragma.crediya.usecase.solicitud;
 
 import co.com.pragma.crediya.model.estado.EstadoCodigos;
 import co.com.pragma.crediya.model.estado.gateways.EstadoRepository;
+import co.com.pragma.crediya.model.page.SimplePage;
+import co.com.pragma.crediya.model.page.SimplePageRequest;
+import co.com.pragma.crediya.model.page.solicitud.SolicitudFieldsPage;
 import co.com.pragma.crediya.model.solicitud.Solicitud;
 import co.com.pragma.crediya.model.solicitud.gateways.RestConsumerRepository;
 import co.com.pragma.crediya.model.solicitud.gateways.SolicitudRepository;
@@ -21,7 +24,6 @@ public class SolicitudUseCase {
     private final SolicitudRepository solicitudRepository;
     private final EstadoRepository estadosRepository;
     private final TipoPrestamoRepository tiposPrestamoRepository;
-
     private final RestConsumerRepository restConsumerRepository;
 
 
@@ -46,6 +48,11 @@ public class SolicitudUseCase {
 
     public Mono<Boolean> validarLimitesMonto(BigDecimal min, BigDecimal max, BigDecimal monto){
         return Mono.just(monto.compareTo(min)>=0 && monto.compareTo(max)<=0);
+    }
+
+
+    public Mono<SimplePage<SolicitudFieldsPage>> page(SimplePageRequest pageRequest) {
+        return solicitudRepository.page(pageRequest);
     }
 
 
