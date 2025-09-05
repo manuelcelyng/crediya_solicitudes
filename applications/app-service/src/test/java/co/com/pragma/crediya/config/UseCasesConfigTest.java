@@ -41,6 +41,10 @@ public class UseCasesConfigTest {
                 @Override
                 public Mono<Solicitud> saveSolicitud(Solicitud solicitud) { return Mono.just(solicitud); }
 
+                @Override
+                public Mono<co.com.pragma.crediya.model.page.SimplePage<co.com.pragma.crediya.model.page.solicitud.SolicitudFieldsPage>> page(co.com.pragma.crediya.model.page.SimplePageRequest pageRequest) {
+                    return Mono.just(new co.com.pragma.crediya.model.page.SimplePage<>(java.util.List.of(), 0L, 0, 0));
+                }
             };
         }
 

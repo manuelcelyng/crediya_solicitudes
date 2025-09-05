@@ -25,13 +25,15 @@ public interface SolicitudEntityMapper {
 
     default Solicitud toDomain(SolicitudEntity entity) {
         if (entity == null) return null;
+        Email email = entity.getEmail() == null ? null : new Email(entity.getEmail());
+        IdDocument doc = entity.getDocumentoIdentidad() == null ? null : new IdDocument(entity.getDocumentoIdentidad());
         return Solicitud.create(
                 entity.getIdEstado(),
                 entity.getIdTipoPrestamo(),
                 entity.getMonto(),
                 entity.getPlazo(),
-                entity.getEmail() == null ? new Email(null): new Email(entity.getEmail()),
-                entity.getDocumentoIdentidad() == null ? new IdDocument(null): new IdDocument(entity.getDocumentoIdentidad())
+                email,
+                doc
         ).withIdNumber(entity.getIdNumber());
     }
 }

@@ -1,5 +1,6 @@
 package co.com.pragma.crediya.model.page;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

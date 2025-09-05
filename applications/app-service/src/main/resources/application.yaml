@@ -19,6 +19,8 @@ logging:
   config: "${LOGGING_CONFIG_FILE:classpath:logback-spring.xml}"
   file:
     path: "${LOG_PATH:build/logs}"
+
+
 management:
   endpoints:
     web:
@@ -31,12 +33,17 @@ management:
   health:
     circuitbreakers:
       enabled: true
+
+
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+
 adapter:
   restconsumer:
     timeout: 5000
-    url: "http://localhost:8080/api/v1/usuarios/valid"
+    baseurl: "http://localhost:8080"
+
+
 resilience4j:
   circuitbreaker:
     instances:

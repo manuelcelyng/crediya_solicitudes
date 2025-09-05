@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 
                         // reglas de negocio
-                        .pathMatchers(HttpMethod.POST, "/api/v1/solicitud/search").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/v1/solicitud/search").hasAnyAuthority("ASESOR")
                         .pathMatchers(HttpMethod.POST, "/api/v1/solicitud/**").hasAuthority("CLIENTE")
                         .anyExchange().authenticated()
                 )

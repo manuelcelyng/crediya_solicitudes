@@ -25,7 +25,7 @@ public class Solicitud {
             Email email,
             IdDocument documentoIdentidad ) {
         // Invatiantes de negocio (No dependemos de anotaciones aqui :D !!! salu2 )
-        if(idEstado==null) { throw new IllegalArgumentException("El idEstado no puede ser nulo");}
+        // idEstado puede ser nulo; si es nulo, el caso de uso aplicará EstadoCodigos.PENDIENTE por defecto
         if(idTipoPrestamo==null) { throw new IllegalArgumentException("El idTipoPrestamo no puede ser nulo");}
         if(monto==null) { throw new IllegalArgumentException("El monto no puede ser nulo");}
         if(plazo==null) { throw new IllegalArgumentException("El plazo no puede ser nulo");}

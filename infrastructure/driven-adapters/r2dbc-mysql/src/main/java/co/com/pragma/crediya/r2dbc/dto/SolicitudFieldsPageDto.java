@@ -22,7 +22,9 @@ public class SolicitudFieldsPageDto {
     @Column("email")
     private String email;
 
-    // Usa alias snake_case en el SQL y lo mapeas al camelCase del campo
+    @Column("tasa_interes")
+    private BigDecimal tasaInteres;
+
     @Column("tipo_prestamo")
     private String tipoPrestamo;
 

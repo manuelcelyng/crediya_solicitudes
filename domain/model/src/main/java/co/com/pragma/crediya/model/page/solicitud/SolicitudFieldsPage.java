@@ -5,11 +5,18 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Builder
-public record SolicitudFieldsPage(
-        BigDecimal monto,
-        Integer plazo,
-        String email,
-        String tipoPrestamo,
-        String estado
-) {
+@Setter
+@Getter
+public class SolicitudFieldsPage{
+        private BigDecimal monto;
+        private Integer plazo;
+        private String email;
+        private String tipoPrestamo;
+        private BigDecimal tasaInteres;
+        private String estado;
+        private String nombre;
+        private BigDecimal salarioBase;
+        private BigDecimal montoMensualSolicitud;
+
+
 }

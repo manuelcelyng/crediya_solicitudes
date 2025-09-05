@@ -21,6 +21,7 @@ public interface MyReactiveRepository extends ReactiveCrudRepository<SolicitudEn
           s.plazo,
           s.email,
           tp.nombre as tipo_prestamo,
+          tp.tasa_interes as tasa_interes,
           e.nombre  as estado
         FROM solicitud s
         JOIN tipo_prestamo tp ON tp.id_tipo_prestamo = s.id_tipo_prestamo
@@ -45,6 +46,7 @@ public interface MyReactiveRepository extends ReactiveCrudRepository<SolicitudEn
           s.monto,
           s.plazo,
           s.email,
+          tp.tasa_interes as tasa_interes,
           tp.nombre AS tipo_prestamo,
           e.nombre  AS estado
         FROM solicitud s

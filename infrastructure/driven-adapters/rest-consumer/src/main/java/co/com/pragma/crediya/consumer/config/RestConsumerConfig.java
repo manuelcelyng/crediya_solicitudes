@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,7 +22,7 @@ public class RestConsumerConfig {
 
     private final int timeout;
 
-    public RestConsumerConfig(@Value("${adapter.restconsumer.url}") String url,
+    public RestConsumerConfig(@Value("${adapter.restconsumer.baseurl}") String url,
                               @Value("${adapter.restconsumer.timeout}") int timeout) {
         this.url = url;
         this.timeout = timeout;
@@ -31,12 +32,12 @@ public class RestConsumerConfig {
     public WebClient getWebClient(WebClient.Builder builder) {
         return builder
             .baseUrl(url)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .clientConnector(getClientHttpConnector())
             .build();
     }
 
-    private ClientHttpConnector getClientHttpConnector() {
+    public ClientHttpConnector getClientHttpConnector() {
         /*
         IF YO REQUIRE APPEND SSL CERTIFICATE SELF SIGNED: this should be in the default cacerts trustore
         */
