@@ -9,21 +9,21 @@ spring:
   liquibase:
     enabled: true
     driver-class-name: com.mysql.cj.jdbc.Driver
-    change-log: "classpath:db/changelog/db.changelog-1.0.0.yaml"
+    change-log: "classpath:db/changelog/db.changelog-master.yaml"
     # Liquibase usará su propio DataSource JDBC si se provee esta URL (el proyecto usa R2DBC para runtime)
-    url: "jdbc:mysql://${adapters.r2dbc.host}:${adapters.r2dbc.port}/${adapters.r2dbc.database}?useUnicode=true&allowPublicKeyRetrieval=true&useSSL=false"
-    user: "${adapters.r2dbc.username}"
-    password: "${adapters.r2dbc.password}"
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useUnicode=true&allowPublicKeyRetrieval=true&useSSL=false
+    user: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
 
 
 adapters:
   r2dbc:
-    host: "localhost"
-    port: 3306
-    database: "crediya_solicitudes"
-    username: "root"
-    password: "mysql"
+    host: ${MYSQL_HOST:localhost}
+    port: ${MYSQL_PORT:3306}
+    database: ${MYSQL_DATABASE}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
 
 
 cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8080"
+  allowed-origins: "*"

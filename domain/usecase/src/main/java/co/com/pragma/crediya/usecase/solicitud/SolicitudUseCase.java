@@ -44,10 +44,17 @@ public class SolicitudUseCase {
                 .flatMap(valid -> valid ? Mono.just(true) :   Mono.error(new MontoOutRange(TypeErrors.MONTO_OUT_RANGE , "El monto está fuera de los limites del tipo de restamo")))// de Boolean -> error si es false
                 .then(restConsumerRepository.getValid(solicitud.getEmail().email(), solicitud.getDocumentoIdentidad().documento()))
                 .switchIfEmpty(Mono.error(new UserValidationException(TypeErrors.USER_VALIDATION_ERROR,"Los campos de la solicitud no coinciden con el usuario autenticado" )))
-                .then(estadosRepository.findById(solicitud.getIdEstado() != null ? solicitud.getIdEstado() : EstadoCodigos.PENDIENTE.getId()))
-                .switchIfEmpty(Mono.error(new EstadoNotFound(TypeErrors.ESTADO_NOT_FOUND , "Estado no encontrado")))
-                // Si  lo anterior está melo, persisto la solicitud :D salu2
-                .then(solicitudRepository.saveSolicitud(solicitud));
+                .then(
+                        estadosRepository.findById(
+                                        (solicitud.getIdEstado() != null)
+                                                ? solicitud.getIdEstado()
+                                                : EstadoCodigos.PENDIENTE.getId()
+                                )
+                                .switchIfEmpty(Mono.error(new EstadoNotFound(
+                                        TypeErrors.ESTADO_NOT_FOUND, "Estado no encontrado")))
+                                .map(estado -> solicitud.withIdEstado(estado.getIdNumber())) // devuelve Solicitud
+                )
+                .flatMap(solicitudRepository::saveSolicitud);
     }
 
 

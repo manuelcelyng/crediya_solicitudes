@@ -39,6 +39,7 @@ public interface SolicitudDtoMapper {
             @Mapping(target = "idNumber", source = "idNumber"),
             @Mapping(target = "documentoIdentidad", source = "documentoIdentidad", qualifiedByName = "fromIdDocument"),
             @Mapping(target = "email", source = "email", qualifiedByName = "fromEmail"),
+            @Mapping(target = "idEstado", source = "idEstado"),
     })
     ResponseSolicitudDTO toResponse(Solicitud solicitud);
 

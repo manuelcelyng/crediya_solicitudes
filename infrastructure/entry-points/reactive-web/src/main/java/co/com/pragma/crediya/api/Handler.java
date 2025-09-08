@@ -76,7 +76,7 @@ public class Handler {
                     }
                     var model = solicitudDtoMapper.toModel(dto);
                     return solicitudUseCase.saveSolicitud(model)
-                            .doOnSuccess(s -> log.info("[CREATE_SOLICITUD] Solicitud persisted id={}", s.getIdNumber()))
+                            .doOnSuccess(s -> log.info("[CREATE_SOLICITUD] Solicitud persisted id={}", s))
                             .flatMap(saved -> ServerResponse.status(HttpStatus.CREATED)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .bodyValue(solicitudDtoMapper.toResponse(saved)));
