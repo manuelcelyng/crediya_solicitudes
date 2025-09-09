@@ -42,9 +42,13 @@ public class SolicitudUseCase {
                         validarLimitesMonto(prestamo.getMontoMinimo(), prestamo.getMontoMaximo(), solicitud.getMonto())
                 )
                 .flatMap(valid -> valid ? Mono.just(true) :   Mono.error(new MontoOutRange(TypeErrors.MONTO_OUT_RANGE , "El monto está fuera de los limites del tipo de restamo")))// de Boolean -> error si es false
-                .then(restConsumerRepository.getValid(solicitud.getEmail().email(), solicitud.getDocumentoIdentidad().documento()))
-                .switchIfEmpty(Mono.error(new UserValidationException(TypeErrors.USER_VALIDATION_ERROR,"Los campos de la solicitud no coinciden con el usuario autenticado" )))
-                .then(
+                .then(Mono.defer(() -> restConsumerRepository.getValid(
+                        solicitud.getEmail().email(),
+                        solicitud.getDocumentoIdentidad().documento()
+                )))
+                .switchIfEmpty(Mono.error(new UserValidationException(TypeErrors.USER_VALIDATION_ERROR,
+                        "Los campos de la solicitud no coinciden con el usuario autenticado" )))
+                .then(Mono.defer(() ->
                         estadosRepository.findById(
                                         (solicitud.getIdEstado() != null)
                                                 ? solicitud.getIdEstado()
@@ -52,8 +56,13 @@ public class SolicitudUseCase {
                                 )
                                 .switchIfEmpty(Mono.error(new EstadoNotFound(
                                         TypeErrors.ESTADO_NOT_FOUND, "Estado no encontrado")))
-                                .map(estado -> solicitud.withIdEstado(estado.getIdNumber())) // devuelve Solicitud
-                )
+                                .map(estado -> {
+                                    Long resolvedId = Optional.ofNullable(estado.getIdNumber())
+                                            .orElseGet(() -> Optional.ofNullable(solicitud.getIdEstado())
+                                                    .orElse(EstadoCodigos.PENDIENTE.getId()));
+                                    return solicitud.withIdEstado(resolvedId);
+                                }) // devuelve Solicitud
+                ))
                 .flatMap(solicitudRepository::saveSolicitud);
     }
 
@@ -66,7 +75,7 @@ public class SolicitudUseCase {
 
     // En el entryPoint debo hacer un mapper
     public Mono<SimplePage<SolicitudFieldsPage>> page(SimplePageRequest pageRequest) {
-        return solicitudRepository.page(pageRequest)
+            return solicitudRepository.page(pageRequest)
                 .flatMap(
                         simplePage ->  {
                             // primero -> los emails ome

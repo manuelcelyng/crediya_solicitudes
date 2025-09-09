@@ -74,12 +74,17 @@ class SolicitudUseCaseTest {
 
         Solicitud req = solicitud(null, new BigDecimal("500"));
         StepVerifier.create(useCase.saveSolicitud(req))
-                .expectNext(req)
+                .assertNext(saved -> {
+                    assertNotSame(req, saved);
+                    assertEquals(req.getMonto(), saved.getMonto());
+                    assertEquals(req.getIdTipoPrestamo(), saved.getIdTipoPrestamo());
+                    assertEquals(EstadoCodigos.PENDIENTE.getId(), saved.getIdEstado());
+                })
                 .verifyComplete();
 
-        // Verifica que consultó el estado por PENDIENTE
+        // Verifica que consultó el estado por PENDIENTE y que guardó algo
         verify(estadoRepository).findById(EstadoCodigos.PENDIENTE.getId());
-        verify(solicitudRepository).saveSolicitud(req);
+        verify(solicitudRepository).saveSolicitud(any());
     }
 
     @Test

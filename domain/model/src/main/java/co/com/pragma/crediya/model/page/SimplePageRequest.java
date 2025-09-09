@@ -16,7 +16,6 @@ public class SimplePageRequest {
     String query = "%";  // Para filtrar por tipo de prestamo.
     List<String> status;
 
-    // Keyset (cursor) pagination
 
     // Crea un String query que ayuda a buscar segun el patron indicado al hacer la consulta
     public String fixQueryFL() {
