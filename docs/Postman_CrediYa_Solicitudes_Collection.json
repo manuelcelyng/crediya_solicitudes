@@ -1,0 +1,156 @@
+{
+  "info": {
+    "name": "CrediYa Solicitudes API",
+    "_postman_id": "b8b1f2b2-1b2e-4a5c-9b0c-111111111111",
+    "description": "Colección para probar la paginación por cursor (keyset) y offset del endpoint de Solicitudes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Instrucciones",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/instrucciones",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","instrucciones"]
+        }
+      }
+    },
+    {
+      "name": "Solicitudes - Primera página (ASC, keyset)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.environment.set('nextCursor', json.nextCursor);",
+              "pm.environment.set('hasNext', String(json.hasNext));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/solicitud?size=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","solicitud"],
+          "query": [
+            {"key": "size", "value": "10"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Solicitudes - Siguiente página (ASC usando nextCursor)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {"exec": [
+            "if (!pm.environment.get('nextCursor')) { throw new Error('Falta nextCursor, ejecute primero la página inicial.'); }"
+          ], "type": "text/javascript"}
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.environment.set('nextCursor', json.nextCursor);",
+              "pm.environment.set('hasNext', String(json.hasNext));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/solicitud?size=10&lastId={{nextCursor}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","solicitud"],
+          "query": [
+            {"key": "size", "value": "10"},
+            {"key": "lastId", "value": "{{nextCursor}}"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Solicitudes - Primera página (DESC)",
+      "event": [
+        {"listen": "test", "script": {"exec": [
+          "const json = pm.response.json();",
+          "pm.environment.set('nextCursorDesc', json.nextCursor);",
+          "pm.environment.set('hasNextDesc', String(json.hasNext));"
+        ], "type": "text/javascript"}}
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/solicitud?direction=DESC&size=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","solicitud"],
+          "query": [
+            {"key": "direction", "value": "DESC"},
+            {"key": "size", "value": "10"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Solicitudes - Siguiente página (DESC usando nextCursor)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/solicitud?direction=DESC&size=10&lastId={{nextCursorDesc}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","solicitud"],
+          "query": [
+            {"key": "direction", "value": "DESC"},
+            {"key": "size", "value": "10"},
+            {"key": "lastId", "value": "{{nextCursorDesc}}"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Solicitudes - Offset page/size (legacy)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/solicitud?page=0&size=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","solicitud"],
+          "query": [
+            {"key": "page", "value": "0"},
+            {"key": "size", "value": "10"}
+          ]
+        }
+      }
+    }
+  ],
+  "event": [],
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8080"},
+    {"key": "token", "value": ""}
+  ]
+}

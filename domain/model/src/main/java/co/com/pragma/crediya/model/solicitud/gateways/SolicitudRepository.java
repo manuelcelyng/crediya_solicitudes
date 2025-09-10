@@ -11,4 +11,6 @@ public interface SolicitudRepository {
 
     Mono<SimplePage<SolicitudFieldsPage>> page(SimplePageRequest pageRequest);
 
+    Mono<Solicitud> findById(Long id);
+
 }

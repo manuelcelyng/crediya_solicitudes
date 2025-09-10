@@ -9,18 +9,16 @@ spring:
     add-properties: false
 security:
   jwt:
-    secret: ${JWT_KEY_SECRET:AQUI VA EL KEY SECRET DEFAULT}
+    secret: ${JWT_KEY_SECRET:fQZJCefphgnEAnD9WlLBIQbpzV351d0mb3oGGsT6bvtaSqIZbTSId6wDwV3B1CbxEO7JlxQK6obNR9oUjDlYGg==}
 app:
-  issuer: ${JWT_ISSUER:"http://localhost:8080"} # lo genera el ms de autenticacion
-  audience: "autenticacion" # no lo estoy usando :D
+  issuer: ${JWT_ISSUER:http://localhost:8080}
+  audience: "autenticacion"
 logging:
   pattern:
     level: "%5p [${spring.application.name}] [cid:%X{correlationId}]"
-  config: ${LOGGING_CONFIG_FILE:classpath:logback-spring.xml}
+  config: "${LOGGING_CONFIG_FILE:classpath:logback-spring.xml}"
   file:
-    path: ${LOG_PATH:build/logs}
-
-
+    path: "${LOG_PATH:build/logs}"
 management:
   endpoints:
     web:
@@ -31,18 +29,17 @@ management:
       probes:
         enabled: true
   health:
-    circuitbreakers:  #TODO incluir esto en los restConsumer
+    circuitbreakers:
       enabled: true
-
-
 cors:
   allowed-origins: "*"
-
 adapter:
   restconsumer:
     timeout: 5000
-    baseurl: ${BASE_URL_MS_AUTH:"http://localhost:8080"}
-
+    baseurl: ${BASE_URL_MS_AUTH:http://localhost:8080}
+  sqs:
+    region: ${AWS_REGION:us-east-2}
+    queueUrl: ${AWS_QUEUE:https://sqs.us-east-2.amazonaws.com/267259336936/solicitud-cambio-estado-sqs}
 
 resilience4j:
   circuitbreaker:

@@ -87,4 +87,11 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
                     );
                 });
     }
+
+    @Override
+    public Mono<Solicitud> findById(Long id) {
+        return super.repository.findById(id)
+                .map(solicitudEntityMapper::toDomain);
+    }
+
 }

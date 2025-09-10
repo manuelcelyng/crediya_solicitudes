@@ -11,6 +11,7 @@ import co.com.pragma.crediya.model.solicitud.IdDocument;
 import co.com.pragma.crediya.model.solicitud.Solicitud;
 import co.com.pragma.crediya.model.solicitud.gateways.RestConsumerRepository;
 import co.com.pragma.crediya.model.solicitud.gateways.SolicitudRepository;
+import co.com.pragma.crediya.model.solicitud.gateways.SQSGateway;
 import co.com.pragma.crediya.model.tipoprestamo.TipoPrestamo;
 import co.com.pragma.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
 import co.com.pragma.crediya.usecase.solicitud.exceptions.*;
@@ -31,6 +32,7 @@ class SolicitudUseCaseTest {
     private EstadoRepository estadoRepository;
     private TipoPrestamoRepository tipoPrestamoRepository;
     private RestConsumerRepository restConsumerRepository;
+    private SQSGateway sqsGateway;
 
     private SolicitudUseCase useCase;
 
@@ -40,7 +42,9 @@ class SolicitudUseCaseTest {
         estadoRepository = mock(EstadoRepository.class);
         tipoPrestamoRepository = mock(TipoPrestamoRepository.class);
         restConsumerRepository = mock(RestConsumerRepository.class);
-        useCase = new SolicitudUseCase(solicitudRepository, estadoRepository, tipoPrestamoRepository, restConsumerRepository);
+        sqsGateway = mock(SQSGateway.class);
+        when(sqsGateway.send(any())).thenReturn(Mono.just("msg-id"));
+        useCase = new SolicitudUseCase(solicitudRepository, estadoRepository, tipoPrestamoRepository, restConsumerRepository, sqsGateway);
     }
 
     private TipoPrestamo tipoPrestamo(BigDecimal min, BigDecimal max){

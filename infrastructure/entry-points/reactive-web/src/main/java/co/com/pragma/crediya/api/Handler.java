@@ -1,6 +1,7 @@
 package co.com.pragma.crediya.api;
 
 import co.com.pragma.crediya.api.dto.CreateSolicitudDTO;
+import co.com.pragma.crediya.api.dto.UpdateEstadoInSolicidudDTO;
 import co.com.pragma.crediya.api.mapper.SolicitudDtoMapper;
 import co.com.pragma.crediya.model.page.SimplePageRequest;
 import co.com.pragma.crediya.model.solicitud.Solicitud;
@@ -94,6 +95,33 @@ public class Handler {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(sp))
                 ).doOnError(ex -> log.error("[GET_SOLICITUDES] Error: {}", ex.toString()));
+    }
+
+
+    public Mono<ServerResponse> listenUpdateStateSolicitud(ServerRequest serverRequest) {
+
+        return serverRequest.bodyToMono(UpdateEstadoInSolicidudDTO.class)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Request Body is Required")))
+                .flatMap(request -> solicitudUseCase.updateEstadoInSolicitud(request.idEstado(), request.idSolicitud()))
+                .doOnNext(s -> log.info("[UPDATE_STATE_SOLICITUD] Solicitud updated id={}", s.getIdNumber()))
+                .flatMap(solicitud ->
+                            ServerResponse.ok()
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .bodyValue(solicitudDtoMapper.toResponse(solicitud))
+                )// Si updateEstadoInSolicitud() devolvió Mono.empty(), caes aquí:
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.info("[UPDATE_STATE_SOLICITUD] Sin cambio: el estado enviado es el mismo.");
+                    return ServerResponse.noContent().build(); // 204
+                    // Alternativas:
+                    // return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                    //     .bodyValue(Map.of("message","Sin cambios"));
+                    // o lanzar un error si tu negocio así lo define:
+                    // Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Estado ya era el mismo"))
+                }))
+                .doOnError(ex -> log.error("[UPDATE_STATE_SOLICITUD] Error: {}", ex.toString()));
+
+
+
     }
 
 

@@ -45,6 +45,9 @@ public class UseCasesConfigTest {
                 public Mono<co.com.pragma.crediya.model.page.SimplePage<co.com.pragma.crediya.model.page.solicitud.SolicitudFieldsPage>> page(co.com.pragma.crediya.model.page.SimplePageRequest pageRequest) {
                     return Mono.just(new co.com.pragma.crediya.model.page.SimplePage<>(java.util.List.of(), 0L, 0, 0));
                 }
+
+                @Override
+                public Mono<Solicitud> findById(Long id) { return Mono.empty(); }
             };
         }
 

@@ -2,12 +2,16 @@ package co.com.pragma.crediya.usecase.solicitud;
 
 import co.com.pragma.crediya.model.estado.EstadoCodigos;
 import co.com.pragma.crediya.model.estado.gateways.EstadoRepository;
+import co.com.pragma.crediya.model.estado.Estado;
+import co.com.pragma.crediya.model.solicitud.SQSMessage;
+import co.com.pragma.crediya.model.tipoprestamo.TipoPrestamo;
 import co.com.pragma.crediya.model.page.SimplePage;
 import co.com.pragma.crediya.model.page.SimplePageRequest;
 import co.com.pragma.crediya.model.page.solicitud.SolicitudFieldsPage;
 import co.com.pragma.crediya.model.page.usuarios.SolicitudUsersFieldsPage;
 import co.com.pragma.crediya.model.solicitud.Solicitud;
 import co.com.pragma.crediya.model.solicitud.gateways.RestConsumerRepository;
+import co.com.pragma.crediya.model.solicitud.gateways.SQSGateway;
 import co.com.pragma.crediya.model.solicitud.gateways.SolicitudRepository;
 
 import co.com.pragma.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
@@ -18,8 +22,10 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -32,6 +38,7 @@ public class SolicitudUseCase {
     private final EstadoRepository estadosRepository;
     private final TipoPrestamoRepository tiposPrestamoRepository;
     private final RestConsumerRepository restConsumerRepository;
+    private final SQSGateway sqsGateway;
 
 
 
@@ -40,8 +47,15 @@ public class SolicitudUseCase {
                 .switchIfEmpty(Mono.error(new TipoPrestamoNotFound(TypeErrors.TIPO_PRESTAMO_NOT_FOUND , "Tipo de Prestamo no encontrado")))
                 .flatMap(prestamo ->
                         validarLimitesMonto(prestamo.getMontoMinimo(), prestamo.getMontoMaximo(), solicitud.getMonto())
+                                .flatMap(valid -> valid
+                                        ? Mono.just(prestamo) :
+                                        Mono.error(
+                                                new MontoOutRange(
+                                                        TypeErrors.MONTO_OUT_RANGE ,
+                                                        "El monto está fuera de los limites del tipo de restamo, el rango para este es: " + prestamo.getMontoMinimo() + " - " + prestamo.getMontoMaximo()))
+                                )
                 )
-                .flatMap(valid -> valid ? Mono.just(true) :   Mono.error(new MontoOutRange(TypeErrors.MONTO_OUT_RANGE , "El monto está fuera de los limites del tipo de restamo")))// de Boolean -> error si es false
+                       // de Boolean -> error si es false
                 .then(Mono.defer(() -> restConsumerRepository.getValid(
                         solicitud.getEmail().email(),
                         solicitud.getDocumentoIdentidad().documento()
@@ -105,6 +119,56 @@ public class SolicitudUseCase {
                         }
                 );
     }
+
+
+    public Mono<Solicitud> updateEstadoInSolicitud(Long idEstado, Long idSolicitud){
+        return Mono.zip(
+                        estadosRepository.findById(idEstado)
+                                .switchIfEmpty(Mono.error(new EstadoNotFound(TypeErrors.ESTADO_NOT_FOUND, "Estado no encontrado"))),
+                        solicitudRepository.findById(idSolicitud)
+                                .switchIfEmpty(Mono.error(new SolicitudNotFound(TypeErrors.SOLICITUD_NOT_FOUND, "Solicitud no encontrada")))
+                )
+                .flatMap(tuple -> {
+                    Estado estado = tuple.getT1();
+                    Solicitud solicitud = tuple.getT2();
+                    if(Objects.equals(solicitud.getIdEstado(), estado.getIdNumber())){ // Me evito una operación a la BD
+                        return Mono.empty(); // Retorna un empty -> Implica que no hubo cambio debido a que el estado es el mismo
+                    } else {
+                        solicitud.setIdEstado(estado.getIdNumber());
+                        return solicitudRepository.saveSolicitud(solicitud)
+                                .map(saved -> Tuples.of(saved, estado));
+                    }
+                })
+                .flatMap(tuple2 -> tiposPrestamoRepository.findById(tuple2.getT1().getIdTipoPrestamo())
+                        .switchIfEmpty(Mono.error(new TipoPrestamoNotFound(TypeErrors.TIPO_PRESTAMO_NOT_FOUND, "Tipo de Prestamo no encontrado")))
+                        .map(tipoPrestamo -> Tuples.of(tuple2.getT1(), tuple2.getT2(), tipoPrestamo))
+                )
+                .flatMap(tuple3 -> {
+
+                    Solicitud saved = (Solicitud) tuple3.getT1();
+                    Estado estado = tuple3.getT2();
+                    TipoPrestamo tipoPrestamo = tuple3.getT3();
+                    String mensaje = ( estado.getNombre().toUpperCase().contains("APRO"))
+                            ? "Su desembolso estará disponible en las próximas 24 horas."
+                            : "Actualización de estado de su solicitud.";
+
+                    SQSMessage messagetoSend =  SQSMessage.builder()
+                            .idSolicitud("SOL-" + LocalDate.now() + "-" + saved.getIdNumber())
+                            .estado(estado.getNombre())
+                            .correo(saved.getEmail().email())
+                            .documento(saved.getDocumentoIdentidad().documento())
+                            .cantidad(saved.getMonto())
+                            .tipo(tipoPrestamo.getNombre())
+                            .mensaje(mensaje)
+                            .build();
+
+                    return sqsGateway.send(messagetoSend).thenReturn(saved);
+                });
+
+    }
+
+
+
 
 
 }
