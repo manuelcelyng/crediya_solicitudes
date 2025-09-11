@@ -14,6 +14,7 @@ public class TypeErrors {
 
     //VALIDACION USUARIO
     public static final String USER_VALIDATION_ERROR = "USER_VALIDATION_ERROR";
+    public static final String VALIDACION_AUTOMATICA_FALLIDA = "VALIDACION_AUTOMATICA_FALLIDA";
 }
 
 

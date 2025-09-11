@@ -16,6 +16,17 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import java.net.URI;
 
+/**
+ * Configuración del cliente SQS por defecto.
+ *
+ * - Crea UN solo bean de {@link SqsAsyncClient} usando {@link SQSSenderProperties}
+ *   (region/endpoint/credenciales).
+ * - Los distintos publishers (p. ej. {@code SQSSender} y {@code SQSValidacionAutomatica})
+ *   reutilizan este cliente; cada uno toma su propia {@code queueUrl} desde su Properties.
+ * - Si más adelante se requiere un cliente distinto para Validación Automática (otra región o endpoint),
+ *   se puede crear un segundo bean calificado y ajustarlo allí. En el diseño actual mantenemos
+ *   un único cliente para evitar ambigüedad de beans.
+ */
 @Configuration
 @ConditionalOnMissingBean(SqsAsyncClient.class)
 public class SQSSenderConfig {

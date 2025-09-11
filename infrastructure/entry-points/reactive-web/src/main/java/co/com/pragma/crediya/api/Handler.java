@@ -99,7 +99,6 @@ public class Handler {
 
 
     public Mono<ServerResponse> listenUpdateStateSolicitud(ServerRequest serverRequest) {
-
         return serverRequest.bodyToMono(UpdateEstadoInSolicidudDTO.class)
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Request Body is Required")))
                 .flatMap(request -> solicitudUseCase.updateEstadoInSolicitud(request.idEstado(), request.idSolicitud()))
@@ -119,9 +118,6 @@ public class Handler {
                     // Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Estado ya era el mismo"))
                 }))
                 .doOnError(ex -> log.error("[UPDATE_STATE_SOLICITUD] Error: {}", ex.toString()));
-
-
-
     }
 
 

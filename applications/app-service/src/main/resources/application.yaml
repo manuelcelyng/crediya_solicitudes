@@ -38,8 +38,12 @@ adapter:
     timeout: 5000
     baseurl: ${BASE_URL_MS_AUTH:http://localhost:8080}
   sqs:
-    region: ${AWS_REGION:us-east-2}
-    queueUrl: ${AWS_QUEUE:https://sqs.us-east-2.amazonaws.com/267259336936/solicitud-cambio-estado-sqs}
+    cambio-estado-sol:
+      region: ${AWS_REGION:us-east-2}
+      queueUrl: ${AWS_QUEUE:https://sqs.us-east-2.amazonaws.com/267259336936/solicitud-cambio-estado-sqs}
+    validacion-automatica:
+      region: ${AWS_REGION:us-east-2}
+      queueUrl: ${AWS_QUEUE:https://sqs.us-east-2.amazonaws.com/267259336936/solicitud-cambio-estado-sqs}
 
 resilience4j:
   circuitbreaker:

@@ -1,8 +1,8 @@
 package co.com.pragma.crediya.sqs.sender;
 
-import co.com.pragma.crediya.model.solicitud.SQSMessage;
-import co.com.pragma.crediya.model.solicitud.gateways.SQSCambioEstadoGateway;
-import co.com.pragma.crediya.sqs.sender.config.SQSSenderProperties;
+import co.com.pragma.crediya.model.solicitud.gateways.SQSValidacionAutomaticaGateway;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.SQSDataValidacionPrestamo;
+import co.com.pragma.crediya.sqs.sender.config.SQSValidacionAutomaticaProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -15,12 +15,15 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 @Service
 @Log4j2
 @RequiredArgsConstructor
-public class SQSSender implements SQSCambioEstadoGateway {
-    private final SQSSenderProperties properties;
+public class SQSValidacionAutomatica implements SQSValidacionAutomaticaGateway {
+
+    private final SQSValidacionAutomaticaProperties properties;
     private final SqsAsyncClient client;
     private final ObjectMapper objectMapper;
 
-    public Mono<String> send(SQSMessage message) { // acepta POJO o String
+
+    @Override
+    public Mono<String> sendSolicitudValidacionAutomatica(SQSDataValidacionPrestamo message) {
         return Mono.fromCallable(() -> toJson(message))
                 .flatMap(json -> Mono.fromFuture(client.sendMessage(
                         SendMessageRequest.builder()
@@ -31,9 +34,7 @@ public class SQSSender implements SQSCambioEstadoGateway {
                 .map(SendMessageResponse::messageId);
     }
 
-
-
-    private String toJson(SQSMessage m) throws Exception {
+    private String toJson(Object m) throws Exception {
         return objectMapper.writeValueAsString(m);
     }
 
@@ -43,4 +44,6 @@ public class SQSSender implements SQSCambioEstadoGateway {
                 .messageBody(message)
                 .build();
     }
+
+
 }

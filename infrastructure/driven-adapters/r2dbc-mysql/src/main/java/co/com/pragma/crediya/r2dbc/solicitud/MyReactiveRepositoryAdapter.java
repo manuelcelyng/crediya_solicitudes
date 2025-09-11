@@ -5,10 +5,12 @@ import co.com.pragma.crediya.model.page.SimplePageRequest;
 import co.com.pragma.crediya.model.page.solicitud.SolicitudFieldsPage;
 import co.com.pragma.crediya.model.solicitud.Solicitud;
 import co.com.pragma.crediya.model.solicitud.gateways.SolicitudRepository;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.DeudaMensual;
 import co.com.pragma.crediya.r2dbc.dto.SolicitudFieldsPageDto;
 import co.com.pragma.crediya.r2dbc.entities.SolicitudEntity;
 import co.com.pragma.crediya.r2dbc.helper.ReactiveAdapterOperations;
 
+import co.com.pragma.crediya.r2dbc.mappers.DeudaMensuaEntityMapper;
 import co.com.pragma.crediya.r2dbc.mappers.SolicitudEntityMapper;
 import co.com.pragma.crediya.r2dbc.mappers.SolicitudPaginationMapper;
 import org.reactivecommons.utils.ObjectMapper;
@@ -28,11 +30,13 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 
             private final SolicitudEntityMapper solicitudEntityMapper;
             private final SolicitudPaginationMapper solicitudPaginationMapper;
+            private final DeudaMensuaEntityMapper deudaMensuaEntityMapper;
 
-            public MyReactiveRepositoryAdapter(MyReactiveRepository repository, ObjectMapper mapper, SolicitudEntityMapper solicitudEntityMapper, SolicitudPaginationMapper solicitudPaginationMapper) {
+            public MyReactiveRepositoryAdapter(MyReactiveRepository repository, ObjectMapper mapper, SolicitudEntityMapper solicitudEntityMapper, SolicitudPaginationMapper solicitudPaginationMapper, DeudaMensuaEntityMapper deudaMensuaEntityMapper) {
                 super(repository, mapper, d -> mapper.map(d, Solicitud.class));
                 this.solicitudEntityMapper = solicitudEntityMapper;
                 this.solicitudPaginationMapper = solicitudPaginationMapper;
+                this.deudaMensuaEntityMapper = deudaMensuaEntityMapper;
             }
 
     @Override
@@ -92,6 +96,12 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     public Mono<Solicitud> findById(Long id) {
         return super.repository.findById(id)
                 .map(solicitudEntityMapper::toDomain);
+    }
+
+    @Override
+    public Mono<List<DeudaMensual>> getListDeudaMensualPrestamosAprobados(String email) {
+        return super.repository.getListDeudaMensualPrestamosAprobados(email)
+                .map(deudaMensuaEntityMapper::toModel).collectList();
     }
 
 }

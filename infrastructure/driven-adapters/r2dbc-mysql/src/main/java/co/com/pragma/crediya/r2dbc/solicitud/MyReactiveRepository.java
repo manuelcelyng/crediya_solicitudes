@@ -1,6 +1,7 @@
 package co.com.pragma.crediya.r2dbc.solicitud;
 
 import co.com.pragma.crediya.model.page.solicitud.SolicitudFieldsPage;
+import co.com.pragma.crediya.r2dbc.dto.DeudaMensualDTO;
 import co.com.pragma.crediya.r2dbc.dto.SolicitudFieldsPageDto;
 import co.com.pragma.crediya.r2dbc.entities.SolicitudEntity;
 import org.springframework.data.domain.Pageable;
@@ -75,6 +76,21 @@ public interface MyReactiveRepository extends ReactiveCrudRepository<SolicitudEn
     """)
     Mono<Long> countResumen(@Param("estados") List<String> estadose,
                             @Param("q") String q);
+
+
+    @Query("""
+        SELECT
+          s.monto,
+          s.plazo,
+          tp.tasa_interes as tasa_interes
+        FROM solicitud s
+        JOIN tipo_prestamo tp ON tp.id_tipo_prestamo = s.id_tipo_prestamo
+        WHERE (:email IS NULL OR LOWER(s.email) LIKE LOWER(:email))
+    """)
+    Flux<DeudaMensualDTO> getListDeudaMensualPrestamosAprobados(
+            @Param("email") String email
+    );
+
 
 
 }
