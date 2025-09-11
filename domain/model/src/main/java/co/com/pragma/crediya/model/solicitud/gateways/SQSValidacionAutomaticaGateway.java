@@ -1,6 +1,6 @@
 package co.com.pragma.crediya.model.solicitud.gateways;
 
-import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.SQSDataValidacionPrestamo;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.sendtoSQS.SQSDataValidacionPrestamo;
 import reactor.core.publisher.Mono;
 
 public interface SQSValidacionAutomaticaGateway {

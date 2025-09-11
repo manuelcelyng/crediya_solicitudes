@@ -1,4 +1,4 @@
-package co.com.pragma.crediya.model.tipoprestamo.validacionautomatica;
+package co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.sendtoSQS;
 
 import lombok.Builder;
 import lombok.Getter;

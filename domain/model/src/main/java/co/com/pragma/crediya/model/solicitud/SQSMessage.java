@@ -1,8 +1,11 @@
 package co.com.pragma.crediya.model.solicitud;
 
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.receiveFromSQS.Cuota;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.util.List;
+
 @Builder
 public record SQSMessage(
         String idSolicitud,
@@ -11,7 +14,8 @@ public record SQSMessage(
         String documento,
         BigDecimal cantidad,// o String si prefieres
         String tipo,
-        String mensaje
+        String mensaje,
+        List<Cuota> plan
 ) {
 }
 /*

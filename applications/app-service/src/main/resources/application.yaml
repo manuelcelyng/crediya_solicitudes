@@ -1,17 +1,17 @@
 server:
-  port: ${SERVER_PORT:8081}
+  port: "${SERVER_PORT:8081}"
 spring:
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+    active: "${SPRING_PROFILES_ACTIVE:local}"
   application:
     name: "solicitudes"
   devtools:
     add-properties: false
 security:
   jwt:
-    secret: ${JWT_KEY_SECRET:fQZJCefphgnEAnD9WlLBIQbpzV351d0mb3oGGsT6bvtaSqIZbTSId6wDwV3B1CbxEO7JlxQK6obNR9oUjDlYGg==}
+    secret: "${JWT_KEY_SECRET:fQZJCefphgnEAnD9WlLBIQbpzV351d0mb3oGGsT6bvtaSqIZbTSId6wDwV3B1CbxEO7JlxQK6obNR9oUjDlYGg==}"
 app:
-  issuer: ${JWT_ISSUER:http://localhost:8080}
+  issuer: "${JWT_ISSUER:http://autenticacion:8080}"
   audience: "autenticacion"
 logging:
   pattern:
@@ -36,14 +36,14 @@ cors:
 adapter:
   restconsumer:
     timeout: 5000
-    baseurl: ${BASE_URL_MS_AUTH:http://localhost:8080}
+    baseurl: "${BASE_URL_MS_AUTH:http://localhost:8080}"
   sqs:
     cambio-estado-sol:
-      region: ${AWS_REGION:us-east-2}
-      queueUrl: ${AWS_QUEUE:https://sqs.us-east-2.amazonaws.com/267259336936/solicitud-cambio-estado-sqs}
+      region: "${AWS_REGION_SQS_CAMBIO_ESTADO:us-east-2}"
+      queueUrl: "${AWS_URL_SQS_CAMBIO_ESTADO:https://sqs.us-east-2.amazonaws.com/267259336936/solicitud-cambio-estado-sqs}"
     validacion-automatica:
-      region: ${AWS_REGION:us-east-2}
-      queueUrl: ${AWS_QUEUE:https://sqs.us-east-2.amazonaws.com/267259336936/solicitud-cambio-estado-sqs}
+      region: "${AWS_REGION_SQS_VAL_AUTO:us-east-2}"
+      queueUrl: "${AWS_URL_SQS_VAL_AUTO:https://sqs.us-east-2.amazonaws.com/267259336936/sqs-validacion-automatica}"
 
 resilience4j:
   circuitbreaker:
@@ -66,3 +66,13 @@ resilience4j:
         slidingWindowSize: 10
         minimumNumberOfCalls: 10
         waitDurationInOpenState: "10s"
+
+
+entrypoint:
+  sqs:
+    region: "${AWS_LISTENER_REGION_SQS_VAL_AUTO:us-east-2}"
+    queueUrl: "${AWS_QUEUE_LISTENER_VAL_AUTO:https://sqs.us-east-2.amazonaws.com/267259336936/validacion-data-response}"
+    waitTimeSeconds: 20
+    maxNumberOfMessages: 10
+    visibilityTimeoutSeconds: 10
+    numberOfThreads: 1

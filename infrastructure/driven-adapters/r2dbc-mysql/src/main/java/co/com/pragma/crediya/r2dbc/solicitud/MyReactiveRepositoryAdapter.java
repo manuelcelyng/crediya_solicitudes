@@ -5,7 +5,7 @@ import co.com.pragma.crediya.model.page.SimplePageRequest;
 import co.com.pragma.crediya.model.page.solicitud.SolicitudFieldsPage;
 import co.com.pragma.crediya.model.solicitud.Solicitud;
 import co.com.pragma.crediya.model.solicitud.gateways.SolicitudRepository;
-import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.DeudaMensual;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.sendtoSQS.DeudaMensual;
 import co.com.pragma.crediya.r2dbc.dto.SolicitudFieldsPageDto;
 import co.com.pragma.crediya.r2dbc.entities.SolicitudEntity;
 import co.com.pragma.crediya.r2dbc.helper.ReactiveAdapterOperations;

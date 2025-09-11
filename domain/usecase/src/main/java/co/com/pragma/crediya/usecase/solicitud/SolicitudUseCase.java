@@ -17,13 +17,15 @@ import co.com.pragma.crediya.model.solicitud.gateways.RestConsumerRepository;
 import co.com.pragma.crediya.model.solicitud.gateways.SolicitudRepository;
 
 import co.com.pragma.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
-import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.DeudaMensual;
-import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.SQSDataValidacionPrestamo;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.receiveFromSQS.ResultadoValidacion;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.sendtoSQS.DeudaMensual;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.sendtoSQS.SQSDataValidacionPrestamo;
 import co.com.pragma.crediya.usecase.solicitud.exceptions.*;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.math.BigDecimal;
@@ -91,38 +93,36 @@ public class SolicitudUseCase {
                 // validación automática con ambos valores y decisión final
                 .flatMap((Tuple2<Solicitud, TipoPrestamo> t) ->
                         validacionAutomatica(t.getT1(), t.getT2())
-                                .flatMap(ok -> ok
-                                        ? solicitudRepository.saveSolicitud(t.getT1())
-                                        : Mono.error(new ValidacionAutomaticaException(
+                                .switchIfEmpty(Mono.error(new ValidacionAutomaticaException(
                                         TypeErrors.VALIDACION_AUTOMATICA_FALLIDA,
-                                        "El proceso de validación automática ha fallado, envie la solicitud nuevamente")))
+                                        "El proceso de validación automática ha fallado, envie la solicitud nuevamente o contactese con un asesor")))
                 );
     }
 
 
     // SI
-    public Mono<Boolean> validacionAutomatica(Solicitud solicitud, TipoPrestamo tipoPrestamo){
+    public Mono<Solicitud> validacionAutomatica(Solicitud solicitud, TipoPrestamo tipoPrestamo){
 
         //Traer el salario_base del cliente con el restConsumeR
         // Asumo que toda la validación del usuario ya se hizo antes de guardar la solicitud y de enviar esto
-        return !tipoPrestamo.getValidacionAutomatica() ?  Mono.just(true) : restConsumerRepository.getUsers(List.of(solicitud.getEmail().email()))
+        return !tipoPrestamo.getValidacionAutomatica() ?  solicitudRepository.saveSolicitud(solicitud) : restConsumerRepository.getUsers(List.of(solicitud.getEmail().email()))
                 .collectMap(SolicitudUsersFieldsPage::correoElectronico, Function.identity())
                 .flatMap( userInfo ->
-                        solicitudRepository.getListDeudaMensualPrestamosAprobados(solicitud.getEmail().email())
-                                .map(listaDeudasMensuales -> SQSDataValidacionPrestamo.builder()
-                                        .idSolicitud(solicitud.getIdNumber())
-                                        .email(solicitud.getEmail().email())
-                                        .ingresoCliente(userInfo.get(solicitud.getEmail().email()).salarioBase())
-                                        .deudaMensualSolicitudesAprobadas(listaDeudasMensuales)
-                                        .deudaMensualSolicitudNueva(DeudaMensual.builder()
-                                                .plazo(solicitud.getPlazo())
-                                                .tasaInteres(tipoPrestamo.getTasaInteres())
-                                                .monto(solicitud.getMonto())
-                                                .build())
-                                        .build())
-                                .flatMap(sqsValidacionAutomaticaGateway::sendSolicitudValidacionAutomatica
-                                ).thenReturn(true)
-
+                                solicitudRepository.saveSolicitud(solicitud).flatMap(solicitudPersistida ->
+                                    solicitudRepository.getListDeudaMensualPrestamosAprobados(solicitud.getEmail().email())
+                                            .map(listaDeudasMensuales -> SQSDataValidacionPrestamo.builder()
+                                                    .idSolicitud(solicitudPersistida.getIdNumber())
+                                                    .email(solicitudPersistida.getEmail().email())
+                                                    .ingresoCliente(userInfo.get(solicitudPersistida.getEmail().email()).salarioBase())
+                                                    .deudaMensualSolicitudesAprobadas(listaDeudasMensuales)
+                                                    .deudaMensualSolicitudNueva(DeudaMensual.builder()
+                                                            .plazo(solicitudPersistida.getPlazo())
+                                                            .tasaInteres(tipoPrestamo.getTasaInteres())
+                                                            .monto(solicitudPersistida.getMonto())
+                                                            .build())
+                                                    .build())
+                                            .flatMap(sqsValidacionAutomaticaGateway::sendSolicitudValidacionAutomatica
+                                            ).thenReturn(solicitudPersistida))
                 );
 
     }
@@ -168,28 +168,8 @@ public class SolicitudUseCase {
     }
 
 
-    public Mono<Solicitud> updateEstadoInSolicitud(Long idEstado, Long idSolicitud){
-        return Mono.zip(
-                        estadosRepository.findById(idEstado)
-                                .switchIfEmpty(Mono.error(new EstadoNotFound(TypeErrors.ESTADO_NOT_FOUND, "Estado no encontrado"))),
-                        solicitudRepository.findById(idSolicitud)
-                                .switchIfEmpty(Mono.error(new SolicitudNotFound(TypeErrors.SOLICITUD_NOT_FOUND, "Solicitud no encontrada")))
-                )
-                .flatMap(tuple -> {
-                    Estado estado = tuple.getT1();
-                    Solicitud solicitud = tuple.getT2();
-                    if(Objects.equals(solicitud.getIdEstado(), estado.getIdNumber())){ // Me evito una operación a la BD
-                        return Mono.empty(); // Retorna un empty -> Implica que no hubo cambio debido a que el estado es el mismo
-                    } else {
-                        solicitud.setIdEstado(estado.getIdNumber());
-                        return solicitudRepository.saveSolicitud(solicitud)
-                                .map(saved -> Tuples.of(saved, estado));
-                    }
-                })
-                .flatMap(tuple2 -> tiposPrestamoRepository.findById(tuple2.getT1().getIdTipoPrestamo())
-                        .switchIfEmpty(Mono.error(new TipoPrestamoNotFound(TypeErrors.TIPO_PRESTAMO_NOT_FOUND, "Tipo de Prestamo no encontrado")))
-                        .map(tipoPrestamo -> Tuples.of(tuple2.getT1(), tuple2.getT2(), tipoPrestamo))
-                )
+    public Mono<Solicitud> updateEstadoInSolicitud(Long idEstado, Long idSolicitud) {
+        return resolverCambioEstado(idEstado, idSolicitud)
                 .flatMap(tuple3 -> {
 
                     Solicitud saved = (Solicitud) tuple3.getT1();
@@ -207,11 +187,91 @@ public class SolicitudUseCase {
                             .cantidad(saved.getMonto())
                             .tipo(tipoPrestamo.getNombre())
                             .mensaje(mensaje)
+                            .plan(null) // Un cambio de estádo no retorna un plan // Oportunidad de mejora
                             .build();
 
                     return sqsGateway.send(messagetoSend).thenReturn(saved);
                 });
+    }
 
+
+
+
+
+
+    public Mono<Void> updateEstadoValidacionAutomatica(ResultadoValidacion resultadoValidacion) {
+        // Determinar estado a aplicar según la validación automática
+        Long estadoDestino =
+                Boolean.TRUE.equals(resultadoValidacion.aprobada())
+                        ? EstadoCodigos.APROBADA.getId()
+                        : resultadoValidacion.aprobada() == null
+                        ? EstadoCodigos.PENDIENTE.getId()
+                        : EstadoCodigos.RECHAZADA.getId(); // ajusta si tienes "PENDIENTE_REVISION" u otro
+
+        return resolverCambioEstado(estadoDestino, resultadoValidacion.idSolicitud())
+                .flatMap(tuple3 -> {
+                    Solicitud saved = (Solicitud) tuple3.getT1();
+                    Estado estado = tuple3.getT2();
+                    TipoPrestamo tipoPrestamo = tuple3.getT3();
+                    String mensaje = ( estado.getNombre().toUpperCase().contains("APRO"))
+                            ? "Su desembolso estará disponible en las próximas 24 horas."
+                            : "Actualización de estado de su solicitud.";
+                    SQSMessage messagetoSend =  SQSMessage.builder()
+                            .idSolicitud("SOL-" + LocalDate.now() + "-" + saved.getIdNumber())
+                            .estado(estado.getNombre())
+                            .correo(saved.getEmail().email())
+                            .documento(saved.getDocumentoIdentidad().documento())
+                            .cantidad(saved.getMonto())
+                            .tipo(tipoPrestamo.getNombre())
+                            .mensaje(mensaje)
+                            .plan(resultadoValidacion.plan()) // Un cambio de estádo no retorna un plan // Oportunidad de mejora
+                            .build();
+
+                    return sqsGateway.send(messagetoSend).then(Mono.empty());
+                });
+    }
+
+
+
+    // -------------------------------
+// MÉTODO COMÚN (privado)
+// -------------------------------
+    /**
+     * Resuelve el cambio de estado:
+     * - Busca Estado y Solicitud
+     * - Si el estado no cambia, retorna la Solicitud original (sin regrabar)
+     * - Si cambia, actualiza la Solicitud con el nuevo estado
+     * - Siempre retorna (Solicitud, Estado, TipoPrestamo)
+     *
+     * NOTA: No envía SQS ni compone mensajes. Eso queda afuera. Por eso hago ese refactor
+     */
+    private Mono<Tuple3<Solicitud, Estado, TipoPrestamo>> resolverCambioEstado(Long idEstado, Long idSolicitud) {
+        // 1) Carga Estado + Solicitud
+        return Mono.zip(
+                        estadosRepository.findById(idEstado)
+                                .switchIfEmpty(Mono.error(new EstadoNotFound(
+                                        TypeErrors.ESTADO_NOT_FOUND, "Estado no encontrado"))),
+                        solicitudRepository.findById(idSolicitud)
+                                .switchIfEmpty(Mono.error(new SolicitudNotFound(
+                                        TypeErrors.SOLICITUD_NOT_FOUND, "Solicitud no encontrada")))
+                )
+                // 2) Si ya estaba en ese estado, NO grabes; si no, actualiza y devuelve la solicitud resultante
+                .flatMap(tuple -> {
+                    Estado estado   = tuple.getT1();
+                    Solicitud sol   = tuple.getT2();
+
+                    Mono<Solicitud> monoSol = Objects.equals(sol.getIdEstado(), estado.getIdNumber())
+                            ? Mono.just(sol)
+                            : solicitudRepository.saveSolicitud(sol.withIdEstado(estado.getIdNumber()));
+
+                    // 3) Una vez tengas la Solicitud final, busca TipoPrestamo y arma el Tuple3
+                    return monoSol.flatMap(solicitudFinal ->
+                            tiposPrestamoRepository.findById(solicitudFinal.getIdTipoPrestamo())
+                                    .switchIfEmpty(Mono.error(new TipoPrestamoNotFound(
+                                            TypeErrors.TIPO_PRESTAMO_NOT_FOUND, "Tipo de Prestamo no encontrado")))
+                                    .map(tp -> Tuples.of(solicitudFinal, estado, tp)) // ✅ aquí t3 NUNCA es null
+                    );
+                });
     }
 
 

@@ -4,8 +4,7 @@ import co.com.pragma.crediya.model.page.SimplePage;
 import co.com.pragma.crediya.model.page.SimplePageRequest;
 import co.com.pragma.crediya.model.page.solicitud.SolicitudFieldsPage;
 import co.com.pragma.crediya.model.solicitud.Solicitud;
-import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.DeudaMensual;
-import reactor.core.publisher.Flux;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.sendtoSQS.DeudaMensual;
 import reactor.core.publisher.Mono;
 
 import java.util.List;

@@ -1,8 +1,7 @@
-package co.com.pragma.crediya.model.tipoprestamo.validacionautomatica;
+package co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.sendtoSQS;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;

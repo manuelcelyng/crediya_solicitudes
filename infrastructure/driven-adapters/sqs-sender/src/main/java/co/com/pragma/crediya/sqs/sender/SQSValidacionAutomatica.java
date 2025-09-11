@@ -1,7 +1,7 @@
 package co.com.pragma.crediya.sqs.sender;
 
 import co.com.pragma.crediya.model.solicitud.gateways.SQSValidacionAutomaticaGateway;
-import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.SQSDataValidacionPrestamo;
+import co.com.pragma.crediya.model.tipoprestamo.validacionautomatica.sendtoSQS.SQSDataValidacionPrestamo;
 import co.com.pragma.crediya.sqs.sender.config.SQSValidacionAutomaticaProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

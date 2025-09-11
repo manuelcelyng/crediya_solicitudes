@@ -75,7 +75,7 @@ public class RestConsumer implements RestConsumerRepository {
     }
 
     @Override
-    public Flux<SolicitudUsersFieldsPage> getUsers(List<String> emails) {
+    public Flux<SolicitudUsersFieldsPage>       getUsers(List<String> emails) {
 
         return bearer().flatMapMany(tok ->
                  client.post()
